@@ -1,4 +1,12 @@
-# --- app.py (Initial Version for Deployment) ---
+# ==============================================================================
+# Re-Vision AI: Your Personal AI Interior Designer
+# Author: [Your Name]
+# Version: 1.0.1 (Troubleshooting D-ID 500 Error)
+#
+# This version explicitly sets the avatar URL to a D-ID predefined image
+# and specifies a standard Microsoft voice to increase API stability.
+# ==============================================================================
+
 import streamlit as st
 import requests
 import time
@@ -7,17 +15,17 @@ import os
 # --- Page Config & API Keys ---
 st.set_page_config(page_title="Synthesis Studio", layout="wide")
 
-# This securely reads the secrets you will provide on the Streamlit Cloud platform.
 D_ID_API_KEY = st.secrets.get("D_ID_API_KEY")
-REPLICATE_API_TOKEN = st.secrets.get("REPLICATE_API_TOKEN") # We will use this later
+REPLICATE_API_TOKEN = st.secrets.get("REPLICATE_API_TOKEN") # Reserved for future use
 
 if REPLICATE_API_TOKEN:
     os.environ["REPLICATE_API_TOKEN"] = REPLICATE_API_TOKEN
 
 # --- D-ID API Functions ---
 D_ID_URL = "https://api.d-id.com/talks"
-# Use a direct URL to a high-quality, public-domain image for the avatar
-AVATAR_URL = "https://i.imgur.com/E3OU9S8.png"
+
+# --- CHANGE 1: Using a standard, predefined D-ID avatar image ---
+AVATAR_URL = "https://cdn.d-id.com/images/predefined_laura.jpg"
 
 def create_talk(script_text):
     """Sends the script to D-ID to start the video generation job."""
@@ -29,11 +37,23 @@ def create_talk(script_text):
         "Authorization": f"Basic {D_ID_API_KEY}",
         "Content-Type": "application/json"
     }
+    
+    # --- CHANGE 2: Specifying a standard voice to improve reliability ---
     payload = {
-        "script": {"type": "text", "input": script_text},
+        "script": {
+            "type": "text",
+            "input": script_text,
+            "provider": {
+                "type": "microsoft",
+                "voice_id": "en-US-JennyNeural"
+            }
+        },
         "source_url": AVATAR_URL,
-        "config": {"result_format": "mp4"}
+        "config": {
+            "result_format": "mp4"
+        }
     }
+    
     try:
         response = requests.post(D_ID_URL, headers=headers, json=payload)
         response.raise_for_status()
@@ -60,7 +80,7 @@ def get_talk_result(talk_id):
                 st.error(f"D-ID job failed: {result.get('result')}")
                 return None
             st.toast(f"Video generation status: {status}...")
-            time.sleep(10) # Using a longer sleep time for cloud deployment
+            time.sleep(10)
         except requests.exceptions.RequestException as e:
             st.error(f"Error getting talk result: {e}")
             return None
@@ -74,7 +94,7 @@ st.info("This is version 1.0: AI Presenter Generation. Captions and music coming
 
 st.subheader("1. Write Your Script")
 script = st.text_area("Enter the text you want the AI presenter to speak:", height=150,
-                      placeholder="e.g., Welcome back to our channel! Today, we're discussing...")
+                      placeholder="e.g., Hello and welcome! Let's test if the new settings work.")
 
 if st.button("Generate My AI Presenter Video", type="primary"):
     if not script:
