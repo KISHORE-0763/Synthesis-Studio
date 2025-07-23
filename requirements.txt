@@ -1,4 +1,7 @@
 streamlit
 replicate
 requests
-moviepy
+moviepy==1.0.3
+numpy==1.26.4
+imageio==2.34.0
+pillow==10.2.0
