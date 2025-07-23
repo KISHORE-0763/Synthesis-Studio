@@ -1,11 +1,10 @@
 # ==============================================================================
 # Synthesis Studio: AI Presenter & Reel Editor
 # Author: [Your Name]
-# Version: 1.1
+# Version: 2.0
 #
-# This version includes two independent features:
-# 1. AI Presenter Video Generation (using D-ID)
-# 2. AI Viral Captions Generator (using Replicate/Whisper and moviepy)
+# This version includes a print statement for debugging deployment issues.
+# It contains two features: AI Presenter Generation and AI Viral Captions.
 # ==============================================================================
 
 # --- Core Libraries ---
@@ -18,7 +17,6 @@ import time
 # --- AI & Video Processing Libraries ---
 import replicate
 from moviepy.editor import *
-import webcolors # This is used by a helper function, but not directly in the main logic anymore.
 
 # ==============================================================================
 # 1. PAGE CONFIGURATION & API MANAGEMENT
@@ -30,6 +28,9 @@ st.set_page_config(
     layout="wide"
 )
 
+# This print statement helps us confirm in the logs that the latest code is running.
+print("--- Using App Version 2.0 with simplified requirements ---")
+
 # Securely load API keys from Streamlit's secrets manager
 D_ID_API_KEY = st.secrets.get("D_ID_API_KEY")
 REPLICATE_API_TOKEN = st.secrets.get("REPLICATE_API_TOKEN")
@@ -37,6 +38,9 @@ REPLICATE_API_TOKEN = st.secrets.get("REPLICATE_API_TOKEN")
 # Set the Replicate API token as an environment variable for the library to use
 if REPLICATE_API_TOKEN:
     os.environ["REPLICATE_API_TOKEN"] = REPLICATE_API_TOKEN
+else:
+    # This error will show up on the page if the Replicate key is missing.
+    st.error("Replicate API token not found. Please add it to your Streamlit secrets to enable AI features.")
 
 # ==============================================================================
 # 2. HELPER FUNCTIONS (The "Backend" Logic)
@@ -196,10 +200,12 @@ with st.container(border=True):
                     
                     if final_video_path:
                         st.success("Captioned video generated!")
-                        with open(final_video_path, 'rb') as f:
-                            st.video(f.read())
-                        # Provide a download button
-                        with open(final_video_path, 'rb') as f:
-                            st.download_button("Download Captioned Video", f, file_name="captioned_video.mp4")
+                        # It's better to read the file bytes into the video element
+                        with open(final_video_path, 'rb') as f_video:
+                            video_bytes = f_video.read()
+                        st.video(video_bytes)
+                        # Re-open for the download button
+                        with open(final_video_path, 'rb') as f_download:
+                            st.download_button("Download Captioned Video", f_download, file_name="captioned_video.mp4")
                     else: st.error("Could not create the final video.")
                 else: st.error("Could not transcribe the audio.")
